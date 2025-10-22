@@ -17,7 +17,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #1d1f21;
+            background: #37352F;
             color: #c5c8c6;
             overflow: hidden;
         }
@@ -109,6 +109,18 @@
             margin-bottom: 1rem;
         }
 
+        .chart-container {
+            margin-top: 1rem;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100px;
+            background: #1d1f21;
+            border: 1px solid #4d4d4d;
+            border-radius: 4px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
@@ -124,6 +136,10 @@
 
             h2 {
                 font-size: 1rem;
+            }
+
+            canvas {
+                height: 80px;
             }
         }
     </style>
@@ -149,8 +165,14 @@
                     <span id="browser"></span>
                     <span id="screen"></span>
                     <span id="battery"></span>
-                    <span id="cpu"></span>
-                    <span id="memory"></span>
+                </div>
+                <div class="chart-container">
+                    <h2>CPU Usage</h2>
+                    <canvas id="cpuChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h2>Memory Usage</h2>
+                    <canvas id="memoryChart"></canvas>
                 </div>
             </div>
         </div>
@@ -188,7 +210,6 @@
             document.getElementById('browser').textContent = browserInfo;
             document.getElementById('screen').textContent = screenInfo;
 
-            // Battery status
             if ('getBattery' in navigator) {
                 navigator.getBattery().then(battery => {
                     const batteryLevel = Math.round(battery.level * 100);
@@ -198,29 +219,83 @@
             } else {
                 document.getElementById('battery').textContent = 'Battery: Info not available';
             }
-
-            // Simulated CPU and Memory usage (since real-time CPU/memory access is restricted in browsers)
-            const simulateCpuUsage = () => Math.round(Math.random() * 100);
-            const simulateMemoryUsage = () => Math.round(Math.random() * 80 + 20); // 20-100% range
-            document.getElementById('cpu').textContent = `CPU Usage: ${simulateCpuUsage()}%`;
-            document.getElementById('memory').textContent = `Memory Usage: ${simulateMemoryUsage()}%`;
         }
 
-        // Update system info periodically
-        function updateSystemInfo() {
-            const simulateCpuUsage = () => Math.round(Math.random() * 100);
-            const simulateMemoryUsage = () => Math.round(Math.random() * 80 + 20);
-            document.getElementById('cpu').textContent = `CPU Usage: ${simulateCpuUsage()}%`;
-            document.getElementById('memory').textContent = `Memory Usage: ${simulateMemoryUsage()}%`;
+        // Chart functionality
+        const cpuCanvas = document.getElementById('cpuChart');
+        const memoryCanvas = document.getElementById('memoryChart');
+        const cpuCtx = cpuCanvas.getContext('2d');
+        const memoryCtx = memoryCanvas.getContext('2d');
+
+        const cpuData = [];
+        const memoryData = [];
+        const maxDataPoints = 20;
+
+        function updateCharts() {
+            // Simulate CPU and Memory usage
+            const cpuUsage = Math.round(Math.random() * 100);
+            const memoryUsage = Math.round(Math.random() * 80 + 20);
+
+            cpuData.push(cpuUsage);
+            memoryData.push(memoryUsage);
+
+            if (cpuData.length > maxDataPoints) cpuData.shift();
+            if (memoryData.length > maxDataPoints) memoryData.shift();
+
+            // Draw CPU chart
+            cpuCtx.clearRect(0, 0, cpuCanvas.width, cpuCanvas.height);
+            cpuCtx.beginPath();
+            cpuCtx.strokeStyle = '#a3be8c';
+            cpuCtx.lineWidth = 2;
+            const cpuStep = cpuCanvas.width / (maxDataPoints - 1);
+            cpuData.forEach((value, index) => {
+                const x = index * cpuStep;
+                const y = cpuCanvas.height - (value / 100) * cpuCanvas.height;
+                if (index === 0) {
+                    cpuCtx.moveTo(x, y);
+                } else {
+                    cpuCtx.lineTo(x, y);
+                }
+            });
+            cpuCtx.stroke();
+
+            // Draw Memory chart
+            memoryCtx.clearRect(0, 0, memoryCanvas.width, memoryCanvas.height);
+            memoryCtx.beginPath();
+            memoryCtx.strokeStyle = '#81a1c1';
+            memoryCtx.lineWidth = 2;
+            const memoryStep = memoryCanvas.width / (maxDataPoints - 1);
+            memoryData.forEach((value, index) => {
+                const x = index * memoryStep;
+                const y = memoryCanvas.height - (value / 100) * memoryCanvas.height;
+                if (index === 0) {
+                    memoryCtx.moveTo(x, y);
+                } else {
+                    memoryCtx.lineTo(x, y);
+                }
+            });
+            memoryCtx.stroke();
         }
+
+        // Adjust canvas size on load and resize
+        function resizeCanvases() {
+            cpuCanvas.width = cpuCanvas.offsetWidth;
+            cpuCanvas.height = cpuCanvas.offsetHeight;
+            memoryCanvas.width = memoryCanvas.offsetWidth;
+            memoryCanvas.height = memoryCanvas.offsetHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvases);
 
         window.onload = () => {
             prompt.textContent = '';
             type();
             updateClock();
             displaySystemInfo();
+            resizeCanvases();
+            updateCharts();
             setInterval(updateClock, 1000);
-            setInterval(updateSystemInfo, 5000); // Update CPU/Memory every 5 seconds
+            setInterval(updateCharts, 2000); // Update charts every 2 seconds
         };
     </script>
 </body>
