@@ -90,6 +90,11 @@
             left: 1rem;
             display: flex;
             gap: 0.5rem;
+            visibility: hidden;
+        }
+
+        .window-controls.visible {
+            visibility: visible;
         }
 
         .window-controls span {
@@ -99,9 +104,22 @@
             display: inline-block;
         }
 
-        .close { background: #ff5555; }
+        .close {
+            background: #ff5555;
+            cursor: pointer;
+        }
+
         .minimize { background: #ffaa00; }
         .maximize { background: #55aa55; }
+
+        .hitbox {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            width: 12px;
+            height: 12px;
+            cursor: pointer;
+        }
 
         .terminal-prompt {
             font-size: 0.8rem;
@@ -145,7 +163,8 @@
     </style>
 </head>
 <body>
-    <div class="window-controls">
+    <div class="hitbox" id="hitbox"></div>
+    <div class="window-controls" id="windowControls">
         <span class="close"></span>
         <span class="minimize"></span>
         <span class="maximize"></span>
@@ -190,6 +209,13 @@
                 setTimeout(type, 100);
             }
         }
+
+        // Toggle window controls
+        const hitbox = document.getElementById('hitbox');
+        const windowControls = document.getElementById('windowControls');
+        hitbox.addEventListener('click', () => {
+            windowControls.classList.toggle('visible');
+        });
 
         // Clock and date functionality
         function updateClock() {
