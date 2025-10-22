@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Tab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Fira Code', monospace;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #1d1f21;
+            color: #c5c8c6;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 90%;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            padding: 2rem;
+            background: #2e2e2e;
+            border: 1px solid #4d4d4d;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .main-content {
+            padding: 2rem;
+            background: #252526;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar {
+            padding: 1.5rem;
+            background: #252526;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .clock-widget {
+            text-align: center;
+        }
+
+        #clock {
+            font-size: 3.5rem;
+            color: #a3be8c;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .date {
+            font-size: 1.2rem;
+            color: #d8dee9;
+            margin-top: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            color: #88c0d0;
+            margin-bottom: 0.5rem;
+        }
+
+        .system-info span {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #d8dee9;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .window-controls {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .window-controls span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .close { background: #ff5555; }
+        .minimize { background: #ffaa00; }
+        .maximize { background: #55aa55; }
+
+        .terminal-prompt {
+            font-size: 0.8rem;
+            color: #a3be8c;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            #clock {
+                font-size: 2.5rem;
+            }
+
+            .date {
+                font-size: 1rem;
+            }
+
+            h2 {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="window-controls">
+        <span class="close"></span>
+        <span class="minimize"></span>
+        <span class="maximize"></span>
+    </div>
+    <div class="container">
+        <div class="main-content">
+            <div class="terminal-prompt">$ date</div>
+            <div class="clock-widget">
+                <div id="clock"></div>
+                <div class="date" id="date"></div>
+            </div>
+        </div>
+        <div class="sidebar">
+            <div class="system-widget">
+                <h2>System Info</h2>
+                <div class="system-info">
+                    <span id="browser"></span>
+                    <span id="screen"></span>
+                    <span id="battery"></span>
+                    <span id="cpu"></span>
+                    <span id="memory"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Typing effect for terminal prompt
+        const prompt = document.querySelector('.terminal-prompt');
+        const text = '$ date';
+        let index = 0;
+
+        function type() {
+            if (index < text.length) {
+                prompt.textContent = text.slice(0, index + 1);
+                index++;
+                setTimeout(type, 100);
+            }
+        }
+
+        // Clock and date functionality
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('date').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // System info
+        function displaySystemInfo() {
+            const browserInfo = `Browser: ${navigator.userAgent.split(' ').pop()}`;
+            const screenInfo = `Resolution: ${window.screen.width}x${window.screen.height}`;
+            document.getElementById('browser').textContent = browserInfo;
+            document.getElementById('screen').textContent = screenInfo;
+
+            // Battery status
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(battery => {
+                    const batteryLevel = Math.round(battery.level * 100);
+                    const batteryStatus = battery.charging ? 'Charging' : 'Not Charging';
+                    document.getElementById('battery').textContent = `Battery: ${batteryLevel}% (${batteryStatus})`;
+                });
+            } else {
+                document.getElementById('battery').textContent = 'Battery: Info not available';
+            }
+
+            // Simulated CPU and Memory usage (since real-time CPU/memory access is restricted in browsers)
+            const simulateCpuUsage = () => Math.round(Math.random() * 100);
+            const simulateMemoryUsage = () => Math.round(Math.random() * 80 + 20); // 20-100% range
+            document.getElementById('cpu').textContent = `CPU Usage: ${simulateCpuUsage()}%`;
+            document.getElementById('memory').textContent = `Memory Usage: ${simulateMemoryUsage()}%`;
+        }
+
+        // Update system info periodically
+        function updateSystemInfo() {
+            const simulateCpuUsage = () => Math.round(Math.random() * 100);
+            const simulateMemoryUsage = () => Math.round(Math.random() * 80 + 20);
+            document.getElementById('cpu').textContent = `CPU Usage: ${simulateCpuUsage()}%`;
+            document.getElementById('memory').textContent = `Memory Usage: ${simulateMemoryUsage()}%`;
+        }
+
+        window.onload = () => {
+            prompt.textContent = '';
+            type();
+            updateClock();
+            displaySystemInfo();
+            setInterval(updateClock, 1000);
+            setInterval(updateSystemInfo, 5000); // Update CPU/Memory every 5 seconds
+        };
+    </script>
+</body>
+</html>
